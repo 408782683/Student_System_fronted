@@ -66,7 +66,7 @@ import {
 } from "../../api/student.js";
 
 const user = JSON.parse(localStorage.getItem("user") || "{}");
-const studentId = user.id;
+const studentId = Number(localStorage.getItem("userId") || user.id);
 const term = ref("2024-2025-1");
 const courseId = ref(null);
 const selectedCourses = ref([]);
@@ -87,6 +87,11 @@ const passwordRules = {
 };
 
 const loadSelectedCourses = async () => {
+  if (!studentId) {
+    ElMessage.error("未获取到学生身份信息，请重新登录");
+    router.replace("/");
+    return;
+  }
   loadingCourses.value = true;
   try {
     const res = await fetchSelectedCourses(studentId);
@@ -97,6 +102,11 @@ const loadSelectedCourses = async () => {
 };
 
 const select = async () => {
+  if (!studentId) {
+    ElMessage.error("未获取到学生身份信息，请重新登录");
+    router.replace("/");
+    return;
+  }
   if (!term.value || !courseId.value) {
     ElMessage.warning("请填写学期和课程ID");
     return;

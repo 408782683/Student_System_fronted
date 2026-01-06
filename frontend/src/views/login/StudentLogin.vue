@@ -40,6 +40,7 @@ const form = reactive({
   username: "",
   password: "",
   captcha: "",
+  captchaKey: "",
   role: "STUDENT"
 });
 const captchaValue = ref("");
@@ -55,8 +56,8 @@ const rules = {
 const fetchCaptcha = async () => {
   loadingCaptcha.value = true;
   try {
-    const key = `${form.role}-${form.username || "guest"}`;
-    const res = await request.get("/api/auth/captcha", { params: { key } });
+    form.captchaKey = `${form.role}-${form.username || "guest"}`;
+    const res = await request.get("/api/auth/captcha", { params: { key: form.captchaKey } });
     captchaValue.value = res.data;
   } finally {
     loadingCaptcha.value = false;
@@ -67,16 +68,15 @@ const handleSuccess = (data) => {
   localStorage.setItem("token", data.token || "mock-token");
   localStorage.setItem("role", data.role);
   localStorage.setItem("user", JSON.stringify(data));
+  if (data?.id) {
+    localStorage.setItem("userId", String(data.id));
+  }
   router.replace("/student/courses");
 };
 
 const submit = () => {
   formRef.value.validate(async (valid) => {
     if (!valid) return;
-    if (!captchaValue.value || captchaValue.value !== form.captcha) {
-      ElMessage.error("验证码错误");
-      return;
-    }
     submitting.value = true;
     try {
       const res = await request.post("/api/auth/login", form);
